@@ -1,0 +1,27 @@
+---
+roles:
+  - name: geerlingguy.ansible
+    version: "2.3.0"
+  - name: geerlingguy.docker
+    version: "6.0.4"
+  - name: geerlingguy.containerd
+    version: "1.3.1"
+  - name: geerlingguy.kubernetes
+    version: "7.1.2"
+  - name: geerlingguy.helm
+    version: "1.0.1"
+  - name: geerlingguy.node_exporter
+    version: "2.0.0"
+  - name: airseneo.vm
+    version: "1.0.3"
+  - name: airseneo.nfs-server
+    version: "1.0.0"
+
+collections:
+  - name: ansible.posix
+    version: ">=1.4.0"
+    source: https://galaxy.ansible.com
+  - name: kubernetes.core
+    version: ">=2.3.2"
+    source: https://galaxy.ansible.com
+  

@@ -1,0 +1,8 @@
+ansible>=9.2.0
+ansible-runner>=2.3.5
+ssh_config>=0.1.5
+# mitogen
+# ansible-lint
+# jmespath
+# pywinrm
+# yaml

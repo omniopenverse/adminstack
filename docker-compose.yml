@@ -1,0 +1,19 @@
+services:
+  infrabox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: infrabox
+    environment:
+      - ANSIBLE_CONFIG=${ANSIBLE_CONFIG}
+    hostname: infrabox
+    image: omniopenverse/infrabox:local
+    network_mode: "host"
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: ../
+        target: /home/ansible/workplace
+        read_only: true
+        bind:
+          create_host_path: true

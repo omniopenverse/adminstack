@@ -1,0 +1,11 @@
+Host *
+    ForwardX11 yes
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+{% if groups is defined and "all" in groups %}
+{% for item in  groups["all"] %}
+Host {{ item }}
+    User {{ hostvars[item].ansible_user }}
+    HostName {{ hostvars[item].ansible_host }}
+{% endfor %}
+{% endif %}
