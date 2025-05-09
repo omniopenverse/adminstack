@@ -1,19 +1,24 @@
 services:
-  infrabox:
+  adminstack:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: infrabox
+    container_name: adminstack
     environment:
-      - ANSIBLE_CONFIG=${ANSIBLE_CONFIG}
-    hostname: infrabox
-    image: omniopenverse/infrabox:local
-    network_mode: "host"
+      ANSIBLE_CONFIG: /home/ansible/workplace/ansible.cfg
+    hostname: adminstack
+    image: omniopenverse/adminstack:local
+    networks:
+      adminstack: null
+    ports:
+      - 5022:22
     restart: unless-stopped
     volumes:
-      - type: volume
-        source: ../
+      - type: bind
+        source: ./..
         target: /home/ansible/workplace
-        read_only: true
-        bind:
-          create_host_path: true
+        read_only: false
+    working_dir: /home/ansible
+networks:
+  adminstack:
+    driver: bridge

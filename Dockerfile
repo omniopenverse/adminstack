@@ -1,20 +1,21 @@
 # Ref: https://hub.docker.com/_/python/tags
 FROM python:3.13.3-slim
 
-WORKDIR /home/ansible/workplace
-
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install --yes gnupg2 python3-pip sshpass curl jq \
-        make ssh git openssh-client make nfs-common j2cli && \
+    apt-get install --yes make python3-pip sshpass curl jq ssh sudo \
+        git vim openssh-client nfs-common j2cli supervisor gnupg2 && \
     pip install --upgrade pip && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
 RUN touch /var/log/admin.log \
     && useradd --home-dir /home/ansible --groups sudo --create-home --shell /bin/bash ansible \
-    && echo -e "ansible\nansible" | passwd ansible \
     && mkdir -p /home/ansible/.ssh /home/ansible/.kube /home/ansible/data \
-    && chown -R ansible:ansible /home/ansible
+    && chown -R ansible:ansible /home/ansible \
+    && echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/ansible \
+    && echo 'ansible:ansible' | chpasswd
+
+WORKDIR /home/ansible
 
 # RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
 #     && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256" \
@@ -44,24 +45,36 @@ RUN touch /var/log/admin.log \
 # RUN curl -sLS https://get.k3sup.dev | sh
 # RUN install k3sup /usr/local/bin/
 
-COPY requirements/python.txt requirements/ansible.yml templates/ssh_config.j2 ./
+COPY requirements/python.txt requirements/ansible.yml ./
 
 RUN pip3 install -r python.txt && rm python.txt
 
 USER ansible
 
-RUN ansible-galaxy install -r ansible.yml && rm ansible.yml \
-    && j2 ssh_config.j2 -o /home/ansible/.ssh/config \
-    && rm ssh_config.j2
+RUN ansible-galaxy install -r ansible.yml && rm ansible.yml
 
 USER root
+
 COPY files/packages /home/ansible/packages
 RUN pip3 install /home/ansible/packages/iaac_helper
+
 USER ansible
 
-CMD ["tail", "-f", "/var/log/admin.log"]
+# COPY templates/ssh_config.j2 ./
+# RUN j2 requirements/ssh_config.j2 -o /home/ansible/.ssh/config \
+#     && rm ssh_config.j2
+
+COPY config/ansible.cfg /home/ansible/workplace/
+COPY config/bash_fancy /home/ansible/.bash_fancy
+RUN echo "source ~/.bash_fancy" >> /home/ansible/.bashrc
+
+COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 22
+
+# CMD ["tail", "-f", "/var/log/admin.log"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 # ssh-keygen -t rsa -b 2048 -q -N "" -f /home/ansible/.ssh/id_rsa \
-# echo "ansible:ansible" | chpasswd
 # cat /home/ansible/.ssh/id_rsa.pub >> /home/ansible/.ssh/authorized_keys
 # sshpass -p ansible ssh-copy-id -i /home/ansible/.ssh/id_rsa.pub -o StrictHostKeyChecking=no ansible@localhost
