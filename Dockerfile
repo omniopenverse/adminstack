@@ -3,7 +3,8 @@ FROM python:3.13.3-slim
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --yes make python3-pip sshpass curl jq ssh sudo \
-        git vim openssh-client nfs-common j2cli supervisor gnupg2 && \
+        git vim openssh-client nfs-common j2cli supervisor iputils-ping \
+        iproute2 gnupg2 && \
     pip install --upgrade pip && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean

@@ -1,0 +1,38 @@
+services:
+  webapp:
+    build: ./../../../web-app
+    ports:
+      - "4200:80"
+    depends_on:
+      - backendapi
+    environment:
+      - API_URL=http://backendapi:5000
+
+  backendapi:
+    build: ./../../../api-app-py
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/usersdb
+    volumes:
+      - ./../../../backendapi:/app
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: usersdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  liquibase:
+    image: liquibase/liquibase
+    volumes:
+      - ./../../../db-app:/liquibase/changelog
+    command: update --url=jdbc:postgresql://db:5432/usersdb --username=user --password=password --changeLogFile=dbchangelog.xml
+
+volumes:
+  postgres_data:
