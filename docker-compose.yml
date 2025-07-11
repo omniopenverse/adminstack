@@ -5,20 +5,29 @@ services:
       dockerfile: Dockerfile
     container_name: adminstack
     environment:
-      ANSIBLE_CONFIG: /home/ansible/workplace/ansible.cfg
+      ANSIBLE_CONFIG: /home/adminstack/workplace/ansible.cfg
     hostname: adminstack
     image: omniopenverse/adminstack:local
     networks:
       adminstack: null
     ports:
-      - 5022:22
+      - "${UNIVERSE_HOST:-127.0.0.1}:5022:22"
     restart: unless-stopped
     volumes:
       - type: bind
         source: ./..
-        target: /home/ansible/workplace
+        target: /home/adminstack/workplace
         read_only: false
-    working_dir: /home/ansible
+      - type: volume
+        source: adminstack_ssh
+        target: /home/adminstack/.ssh
+        volume: {}
+    working_dir: /home/adminstack
+
 networks:
   adminstack:
     driver: bridge
+
+volumes:
+  adminstack_ssh:
+    driver: local
