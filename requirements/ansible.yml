@@ -10,11 +10,9 @@ roles:
     version: "1.0.1"
   - name: geerlingguy.node_exporter
     version: "2.0.0"
-  - name: airseneo.vm
-    version: "2.0.1"
-  - name: airseneo.kubernetes
-    version: "v1.0.0"
-  - name: airseneo.nfs-server
+  - name: omniopenverse-bot.vm
+    version: "1.0.1"
+  - name: omniopenverse-bot.kubernetes
     version: "1.0.0"
 
 collections:

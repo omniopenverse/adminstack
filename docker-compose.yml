@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: adminstack
     environment:
+      PASSSWORD: password
       ANSIBLE_CONFIG: /home/adminstack/workplace/ansible.cfg
     hostname: adminstack
     image: omniopenverse/adminstack:local
