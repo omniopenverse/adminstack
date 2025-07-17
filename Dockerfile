@@ -5,7 +5,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --yes make python3-pip sshpass curl wget jq ssh sudo \
         git gh vim openssh-client nfs-common j2cli supervisor iputils-ping \
         iproute2 gnupg2 bash-completion software-properties-common \
-        apt-transport-https && \
+        apt-transport-https jupyter-notebook gettext && \
     pip install --upgrade pip && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
@@ -51,7 +51,7 @@ RUN VERSION=v0.27.1 \
 
 RUN curl -sLS https://get.k3sup.dev | sh
 
-COPY requirements/python.txt requirements/ansible.yml ./
+COPY --chown=adminstack:adminstack requirements/python.txt requirements/ansible.yml ./
 
 RUN pip3 install -r python.txt && rm python.txt \
     && python -m bash_kernel.install
@@ -65,23 +65,32 @@ RUN code-server --install-extension bierner.markdown-mermaid
 
 USER root
 
-# COPY files/packages /home/adminstack/packages
+# COPY --chown=adminstack:adminstack files/packages /home/adminstack/packages
 # RUN pip3 install /home/adminstack/packages/iaac_helper
 
-COPY config/gh.sh /usr/local/bin/mygh
+COPY --chown=adminstack:adminstack config/gh.sh /usr/local/bin/mygh
 RUN chmod +x /usr/local/bin/mygh
 
-COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN mkdir -p /var/log/supervisor \
-    && touch /var/log/supervisor/supervisord.log /var/run/supervisord.pid \
+COPY --chown=adminstack:adminstack config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN mkdir -p /var/log/supervisor /home/adminstack/.config/supervisor \
+    && touch /var/log/supervisor/supervisord.log \
+            /var/run/supervisord.pid \
+            /var/run/sshd.pid \
+    && chown -R adminstack:adminstack /var/run/sshd.pid \
     && chown -R adminstack:adminstack /var/log/supervisor \
-    && chown adminstack:adminstack /var/run/supervisord.pid
+    && chown adminstack:adminstack /var/run/supervisord.pid \
+    && chown adminstack:adminstack /home/adminstack/.config/supervisor
 
 USER adminstack
 
 COPY config/ansible.cfg /etc/ansible/ansible.cfg
-COPY config/bash_fancy /home/adminstack/.bash_fancy
+COPY --chown=adminstack:adminstack config/bash_fancy /home/adminstack/.bash_fancy
 RUN echo "source ~/.bash_fancy" >> /home/adminstack/.bashrc
+
+COPY --chown=adminstack:adminstack config/vscode-settings.json /home/adminstack/.local/share/code-server/User/settings.json
+# COPY --chown=adminstack:adminstack config/vscode-settings.json /home/facko/.config/Code/User/settings.json
+
+COPY --chown=adminstack:adminstack entrypoint.sh /entrypoint.sh
 
 ENV LC_ALL="C.UTF-8"
 ENV LANG="C.UTF-8"
@@ -89,7 +98,7 @@ ENV LANG="C.UTF-8"
 EXPOSE 22 8080
 
 # CMD ["tail", "-f", "/var/log/admin.log"]
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["bash", "/entrypoint.sh"]
 
 # ssh-keygen -t rsa -b 2048 -q -N "" -f /home/adminstack/.ssh/id_rsa \
 # cat /home/adminstack/.ssh/id_rsa.pub >> /home/adminstack/.ssh/authorized_keys

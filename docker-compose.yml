@@ -5,14 +5,18 @@ services:
       dockerfile: Dockerfile
     container_name: adminstack
     environment:
-      PASSSWORD: password
-      ANSIBLE_CONFIG: /home/adminstack/workplace/ansible.cfg
+      START_SSHD: true
+      START_CODE_SERVER: true
+      START_JUPYTER_SERVER: true
+      PASSWORD: password # Default password for code-server
     hostname: adminstack
     image: omniopenverse/adminstack:local
     networks:
       adminstack: null
     ports:
       - "${UNIVERSE_HOST:-127.0.0.1}:5022:22"
+      - "${UNIVERSE_HOST:-127.0.0.1}:5024:8080"
+      - "${UNIVERSE_HOST:-127.0.0.1}:5026:8888"
     restart: unless-stopped
     volumes:
       - type: bind
