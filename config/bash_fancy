@@ -264,3 +264,5 @@ bash_prompt
 unset bash_prompt
 
 ### EOF ###
+
+source <(kubectl completion bash)
