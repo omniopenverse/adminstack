@@ -90,7 +90,7 @@ RUN code-server --install-extension bierner.markdown-mermaid
 
 # Create a user for adminstack
 RUN touch /var/log/adminstack.log \
-    && useradd --home-dir /home/adminstack --groups sudo,docker --create-home --shell /bin/bash adminstack \
+    && useradd --home-dir /home/adminstack --groups sudo --create-home --shell /bin/bash adminstack \
     && mkdir -p /home/adminstack/.ssh /home/adminstack/.kube \
     && ssh-keygen -t rsa -b 2048 -q -N "" -f /home/adminstack/.ssh/id_rsa \
     && chmod 700 /home/adminstack/.ssh \

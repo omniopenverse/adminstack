@@ -5,10 +5,10 @@ services:
       dockerfile: Dockerfile
     container_name: adminstack
     environment:
-      START_SSHD: true
-      START_CODE_SERVER: true
+      START_SSH_SERVER: true
+      START_VSCODE_SERVER: true
       START_JUPYTER_SERVER: true
-      PASSWORD: password # Default password for code-server
+      VSCODE_SERVER_PASSWORD: password # Default password for code-server
     hostname: adminstack
     image: omniopenverse/adminstack:local
     networks:
