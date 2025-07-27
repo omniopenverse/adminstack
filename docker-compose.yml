@@ -18,27 +18,8 @@ services:
       - "${UNIVERSE_HOST:-127.0.0.1}:5024:8080"
       - "${UNIVERSE_HOST:-127.0.0.1}:5026:8888"
     restart: unless-stopped
-    volumes:
-      - type: bind
-        source: ./..
-        target: /home/adminstack/workplace
-        read_only: false
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-        read_only: true
-        bind:
-          create_host_path: false
-      - type: volume
-        source: adminstack_ssh
-        target: /home/adminstack/.ssh
-        volume: {}
     working_dir: /home/adminstack
 
 networks:
   adminstack:
     driver: bridge
-
-volumes:
-  adminstack_ssh:
-    driver: local

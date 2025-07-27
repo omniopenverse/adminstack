@@ -88,6 +88,12 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/doc
 RUN code-server --install-extension bierner.markdown-mermaid
                                     # ms-toolsai.jupyter
 
+# Install ansible and set up configuration
+RUN apt-get install --yes python3-software-properties python3-launchpadlib \
+    && add-apt-repository --yes --update ppa:ansible/ansible \
+    && apt-get install ansible --yes
+COPY config/ansible.cfg /etc/ansible/ansible.cfg
+
 # Create a user for adminstack
 RUN touch /var/log/adminstack.log \
     && useradd --home-dir /home/adminstack --groups sudo --create-home --shell /bin/bash adminstack \
@@ -115,9 +121,6 @@ RUN mkdir -p /var/log/supervisor /home/adminstack/.config/supervisor \
     && chown -R adminstack:adminstack /var/run/sshd.pid \
     && chown -R adminstack:adminstack /var/log/supervisor \
     && chown adminstack:adminstack /var/run/supervisord.pid
-
-# Set up ansible configuration
-COPY config/ansible.cfg /etc/ansible/ansible.cfg
 
 # Set up bash configuration
 COPY --chown=adminstack:adminstack config/bash_fancy /home/adminstack/.bash_fancy

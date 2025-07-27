@@ -3,7 +3,7 @@ services:
     volumes:
       - type: bind
         source: ./..
-        target: /home/adminstack/workplace
+        target: /home/adminstack/shared
         read_only: false
       - type: bind
         source: /var/run/docker.sock
@@ -11,4 +11,11 @@ services:
         read_only: true
         bind:
           create_host_path: false
-    working_dir: /home/adminstack
+      - type: volume
+        source: adminstack_data
+        target: /home/adminstack
+        volume: {}
+
+volumes:
+  adminstack_data:
+    driver: local
