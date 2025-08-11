@@ -36,7 +36,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 #   Ref: https://github.com/coder/code-server/releases
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-
 # Install the latest release of kubectl
 #   Ref: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-on-linux
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
@@ -94,11 +93,24 @@ RUN apt-get install --yes python3-software-properties python3-launchpadlib \
     && apt-get install ansible --yes
 COPY config/ansible.cfg /etc/ansible/ansible.cfg
 
+# Install kind for local Kubernetes cluster management
+#   Ref: https://kind.sigs.k8s.io/docs/user/quick-start/#installation
+RUN curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64 \
+    && chmod +x ./kind \
+    && mv ./kind /usr/local/bin/kind \
+    && kind completion bash | sudo tee /etc/bash_completion.d/kind > /dev/null
+
+# Install minikube for local Kubernetes cluster management
+#   Ref: https://minikube.sigs.k8s.io/docs/start/
+RUN curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb \
+    && dpkg -i minikube_latest_amd64.deb \
+    && minikube completion bash | sudo tee /etc/bash_completion.d/minikube > /dev/null \
+    && rm minikube_latest_amd64.deb
+
 # Create a user for adminstack
 RUN touch /var/log/adminstack.log \
     && useradd --home-dir /home/adminstack --groups sudo --create-home --shell /bin/bash adminstack \
     && mkdir -p /home/adminstack/.ssh /home/adminstack/.kube \
-    && ssh-keygen -t rsa -b 2048 -q -N "" -f /home/adminstack/.ssh/id_rsa \
     && chmod 700 /home/adminstack/.ssh \
     && chown -R adminstack:adminstack /home/adminstack \
     && chown adminstack:adminstack /var/log/adminstack.log \
@@ -130,7 +142,7 @@ RUN echo "source ~/.bash_fancy" >> /home/adminstack/.bashrc
 COPY --chown=adminstack:adminstack config/vscode-settings.json /home/adminstack/.local/share/code-server/User/settings.json
 
 # Copy ssh configuration
-COPY --chown=adminstack:adminstack templates /home/adminstack/.config
+COPY --chown=adminstack:adminstack config/ssh_config.j2 /home/adminstack/.config/ssh/config.j2
 
 # Set up entrypoint script
 COPY --chown=adminstack:adminstack entrypoint.sh /entrypoint.sh
