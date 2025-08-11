@@ -1,33 +1,76 @@
 #!/bin/bash
 set -e  # Exit on error
 
-# Check if the environment variables are set to true
-# and return "true" or "false" accordingly
-# Usage: check VARIABLE_NAME
-# Example: check START_SSH_SERVER
-# Returns "true" if the variable is set to "true", otherwise returns "false"
-check() {
-	local var="${!1:-}"
-	if [[ "$var" == "true" ]]; then
-		echo "true"
-	else
-		echo "false"
+# Check if /var/run/docker.sock exists, create a group with its GID, 
+# and add adminstack user to that group
+ensureDockerSockGroup() {
+	local sock_file="/var/run/docker.sock"
+	if [ -e "$sock_file" ]; then
+		local gid=$(stat -c '%g' "$sock_file")
+		local group_name="docker_sock_${gid}"
+		if ! getent group "$group_name" > /dev/null; then
+			sudo groupadd -g "$gid" "$group_name"
+		fi
+		sudo usermod -aG "$group_name" adminstack
 	fi
 }
 
-# Ensure the necessary environment variables are set
-# If not set, default them to "false"
-# This allows the supervisor configuration to be generated correctly
-# and prevents errors during startup
-if [[ -n "$VSCODE_SERVER_PASSWORD" ]]; then
-	export PASSWORD="$VSCODE_SERVER_PASSWORD"
-else
-	export PASSWORD="password"  # Default password for code-server
-fi
-START_SSH_SERVER="$(check START_SSH_SERVER)" \
-START_VSCODE_SERVER="$(check START_VSCODE_SERVER)" \
-START_JUPYTER_SERVER="$(check START_JUPYTER_SERVER)" \
+# Function to set default boolean values for environment variables
+# If the variable is set to "true" or "false", it will be exported as such.
+# If the variable is not set, it will be assigned a default value.
+setDefaultBooleanValue() {
+	local var="${!1:-}"
+	local var_name="$1"
+	local default_value="$2"
+
+	if [[ "$var" == "true" ]]; then
+		export "$var_name"="true"
+	elif [[ "$var" == "false" ]]; then
+		export "$var_name"="false"
+	else
+		export "$var_name"="$default_value"
+	fi
+}
+
+# Set default values for environment variables if they are not set
+setDefaultsValue() {
+	local var_name="$1"
+	local default_value="$2"
+
+	if [ -z "${!var_name}" ]; then
+		export "$var_name"="$default_value"
+	fi
+}
+
+# Function to set Git global configuration
+# It sets the Git configuration if variables are provided.
+setGitGlobalConfig() {
+	local user_name="${GIT_USER_NAME:-}"
+	local user_email="${GIT_USER_EMAIL:-}"
+
+	if [ -n "$user_name" ]; then
+		git config --global user.name "$user_name"
+	fi
+	if [ -n "$user_email" ]; then
+		git config --global user.email "$user_email"
+	fi
+}
+
+# Set default values for environment variables
+setDefaultsValue 		VSCODE_SERVER_PASSWORD 	"password"
+setDefaultBooleanValue 	START_SSH_SERVER 		"false"
+setDefaultBooleanValue 	START_VSCODE_SERVER 	"false"
+setDefaultBooleanValue 	START_JUPYTER_SERVER 	"false"
+
+# Generate the supervisor configuration file with environment variables
+PASSWORD="${VSCODE_SERVER_PASSWORD:-password}" \
 envsubst < /etc/supervisor/conf.d/supervisord.conf > /home/adminstack/.config/supervisor/supervisord.conf
+
+# Ensure the docker socket group exists and add the adminstack user to it
+ensureDockerSockGroup
+
+# Set Git global configuration if user name and email are provided
+setGitGlobalConfig
 
 # Start the supervisor application
 /usr/bin/supervisord -c /home/adminstack/.config/supervisor/supervisord.conf

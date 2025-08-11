@@ -1,10 +1,13 @@
 services:
   adminstack:
+    environment:
+      GIT_USER_NAME: omniverse
+      GIT_USER_EMAIL: omniverse@gmail.com
     volumes:
       - type: bind
         source: ./..
         target: /home/adminstack/shared
-        read_only: false
+        read_only: true
       - type: bind
         source: /var/run/docker.sock
         target: /var/run/docker.sock
@@ -12,10 +15,10 @@ services:
         bind:
           create_host_path: false
       - type: volume
-        source: adminstack_data
-        target: /home/adminstack
+        source: adminstack_ssh_keys
+        target: /home/adminstack/.ssh
         volume: {}
 
 volumes:
-  adminstack_data:
+  adminstack_ssh_keys:
     driver: local
