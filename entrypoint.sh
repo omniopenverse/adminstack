@@ -56,11 +56,36 @@ setGitGlobalConfig() {
 	fi
 }
 
+prepareServerForSsh() {
+	local START_SSH_SERVER=$1
+
+	# Check if the SSH server should be started
+	if [ "$START_SSH_SERVER" != "true" ]; then
+		echo "SSH server is not set to start. Skipping SSH setup."
+		return
+	fi
+	# Ensure the .ssh directory exists
+	if [ ! -d ~/.ssh ]; then
+		echo "Creating .ssh directory..."
+		mkdir --parent --mode 700 ~/.ssh
+	fi
+	# Generate SSH keys if they do not exist
+	if [ ! -f ~/.ssh/id_rsa ]; then
+		echo "Generating SSH keys..."
+		ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ""
+	else
+		echo "SSH keys already exist."
+	fi
+}
+
 # Set default values for environment variables
 setDefaultsValue 		VSCODE_SERVER_PASSWORD 	"password"
 setDefaultBooleanValue 	START_SSH_SERVER 		"false"
 setDefaultBooleanValue 	START_VSCODE_SERVER 	"false"
 setDefaultBooleanValue 	START_JUPYTER_SERVER 	"false"
+
+# Prepare the server for SSH if the environment variable is set
+prepareServerForSsh "$START_SSH_SERVER"
 
 # Generate the supervisor configuration file with environment variables
 PASSWORD="${VSCODE_SERVER_PASSWORD:-password}" \

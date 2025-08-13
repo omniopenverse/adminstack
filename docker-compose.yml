@@ -10,7 +10,7 @@ services:
       START_JUPYTER_SERVER: true
       VSCODE_SERVER_PASSWORD: password
     hostname: adminstack
-    image: omniopenverse/adminstack:local
+    image: omniopenverse/adminstack:latest
     networks:
       adminstack: null
     ports:
